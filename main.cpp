@@ -3,6 +3,7 @@
 #include <string>
 #include <windows.h>
 #define maxCommandCant 100
+#define quitKey '`'
 
 using namespace std;
 bool recording = false;
@@ -46,6 +47,11 @@ void clickDown()
 void clickUp()
 {
     mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+}
+
+bool isPressed(char key)
+{
+    return GetAsyncKeyState((BYTE)VkKeyScan((char)key)) & 0x8000;
 }
 
 void move(int x, int y)
@@ -156,7 +162,7 @@ void play()
         string currentCommand = commands[currentCommandIndex];
         if (currentCommand[0] == 'm')
             move(stoi(currentCommand.substr(1, currentCommand.find(","))), stoi(currentCommand.substr(currentCommand.find(",") + 1)));
-        if (currentCommand[0] == 'p')
+        else if (currentCommand[0] == 'p')
             cout << currentCommand.substr(1) << endl;
         else if (currentCommand[0] == 'c')
         {
@@ -176,6 +182,9 @@ void play()
         else if (currentCommand[0] == 'L')
             currentCommandIndex = loopPos;
         else if (currentCommand[0] == 'q')
+            break;
+
+        if (isPressed(quitKey))
             break;
         currentCommandIndex++;
     }
