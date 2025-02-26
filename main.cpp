@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <windows.h>
+#define maxCommandCant 100
 
 using namespace std;
 bool recording = false;
@@ -11,6 +12,7 @@ mx,y (move)
 c (click)
 cu (clickUp)
 cd (clickDown)
+pText (print)
 wText (write)
 dTimeInMiliseconds (delay)
 l (mark loop start)
@@ -114,42 +116,69 @@ void record()
     f.close();
 }
 
+char readCommandsFromFile(string *commands)
+{
+    ifstream f("record.txt");
+    string line;
+    unsigned char commandsCant = 0;
+    if (!f)
+        return -1;
+    while (getline(f, line) && commandsCant < maxCommandCant)
+    {
+        if (commandsCant == maxCommandCant)
+            break;
+        commands[commandsCant++] = line;
+    }
+    f.close();
+    return commandsCant == maxCommandCant ? -2 : commandsCant;
+}
+
 void play()
 {
     cout << "Playing..." << endl;
-    streampos loopPos;
-    ifstream f("record.txt");
-    if (!f)
+    string *commands = new string[maxCommandCant];
+    char commandsCant = readCommandsFromFile(commands);
+    switch (commandsCant)
     {
-        cout << "Couldn't open the file" << endl;
+    case -1:
+        cout << "unable to read file" << endl;
         return;
+    case -2:
+        cout << "max command number exceed" << endl;
+        return;
+    default:
+        break;
     }
-    string line;
-    while (getline(f, line))
+    unsigned char currentCommandIndex = 0;
+    unsigned char loopPos = 0;
+    while (currentCommandIndex < commandsCant)
     {
-        if (line[0] == 'm')
-            move(stoi(line.substr(1, line.find(","))), stoi(line.substr(line.find(",") + 1)));
-        else if (line[0] == 'c')
+        string currentCommand = commands[currentCommandIndex];
+        if (currentCommand[0] == 'm')
+            move(stoi(currentCommand.substr(1, currentCommand.find(","))), stoi(currentCommand.substr(currentCommand.find(",") + 1)));
+        if (currentCommand[0] == 'p')
+            cout << currentCommand.substr(1) << endl;
+        else if (currentCommand[0] == 'c')
         {
-            if (line[1] == 'd')
+            if (currentCommand[1] == 'd')
                 clickDown();
-            else if (line[1] == 'u')
+            else if (currentCommand[1] == 'u')
                 clickUp();
             else
                 click();
         }
-        else if (line[0] == 'w')
-            write(line.substr(1));
-        else if (line[0] == 'd')
-            Sleep(stoi(line.substr(1)));
-        else if (line[0] == 'l')
-            loopPos = f.tellg();
-        else if (line[0] == 'L')
-            f.seekg(loopPos);
-        else if (line[0] == 'q')
+        else if (currentCommand[0] == 'w')
+            write(currentCommand.substr(1));
+        else if (currentCommand[0] == 'd')
+            Sleep(stoi(currentCommand.substr(1)));
+        else if (currentCommand[0] == 'l')
+            loopPos = currentCommandIndex;
+        else if (currentCommand[0] == 'L')
+            currentCommandIndex = loopPos;
+        else if (currentCommand[0] == 'q')
             break;
+        currentCommandIndex++;
     }
-    f.close();
 }
 
 int main(int argc, char const *argv[])
