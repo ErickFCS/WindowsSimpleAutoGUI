@@ -9,6 +9,8 @@ bool recording = false;
 /*
 mx,y (move)
 c (click)
+cu (clickUp)
+cd (clickDown)
 wText (write)
 dTimeInMiliseconds (delay)
 l (mark loop start)
@@ -21,18 +23,27 @@ void write(const std::string texto)
     for (char print : texto)
     {
         keybd_event((BYTE)VkKeyScan((char)print), 0, 0, 0);
-        Sleep(100);
+        Sleep(50);
         keybd_event((BYTE)VkKeyScan((char)print), 0, KEYEVENTF_KEYUP, 0);
-        Sleep(100);
+        Sleep(50);
     }
 }
 
 void click()
 {
     mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-    Sleep(100);
+    Sleep(10);
     mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-    Sleep(100);
+}
+
+void clickDown()
+{
+    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+}
+
+void clickUp()
+{
+    mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
 }
 
 void move(int x, int y)
@@ -43,9 +54,9 @@ void move(int x, int y)
 void enter()
 {
     keybd_event(VK_RETURN, 0, 0, 0);
-    Sleep(100);
+    Sleep(50);
     keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, 0);
-    Sleep(100);
+    Sleep(50);
 }
 
 void record()
@@ -110,7 +121,7 @@ void play()
     ifstream f("record.txt");
     if (!f)
     {
-        cout << "Couldn't open the f" << endl;
+        cout << "Couldn't open the file" << endl;
         return;
     }
     string line;
@@ -119,7 +130,14 @@ void play()
         if (line[0] == 'm')
             move(stoi(line.substr(1, line.find(","))), stoi(line.substr(line.find(",") + 1)));
         else if (line[0] == 'c')
-            click();
+        {
+            if (line[1] == 'd')
+                clickDown();
+            else if (line[1] == 'u')
+                clickUp();
+            else
+                click();
+        }
         else if (line[0] == 'w')
             write(line.substr(1));
         else if (line[0] == 'd')
@@ -130,7 +148,6 @@ void play()
             f.seekg(loopPos);
         else if (line[0] == 'q')
             break;
-        Sleep(100);
     }
     f.close();
 }
